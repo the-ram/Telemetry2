@@ -27,8 +27,7 @@ public class AppConfig extends ResourceConfig {
         register(GzipReaderInterceptor.class);
         register(JerseyPropertiesFeature.class);
         property(JerseyPropertiesFeature.RESOURCE_PATH, "application.properties");
-        logger.info("Now running the registration process in resource config");
-
+        logger.debug("Now running the registration process in resource config");
         register(new AbstractBinder() {
             @Override
             public void configure() {

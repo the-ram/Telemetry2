@@ -46,8 +46,9 @@ public class EventsController {
     public Response postEvents(@Context HttpHeaders httpHeaders, String jsonEvent) {
         try {
             ObjectMapper mapper = new ObjectMapper();
+            @SuppressWarnings("unchecked")
             Map<String, Object> eventsMap = mapper.readValue(jsonEvent, Map.class);
-            ArrayList<String> events = (ArrayList<String>) eventsMap.get("events");
+            ArrayList<Map<String, Object>> events = (ArrayList<Map<String, Object>>) eventsMap.get("events");
             String deviceId = httpHeaders.getHeaderString("x-device-id");
 
             if (events != null && events.size() > 0) {
@@ -56,24 +57,19 @@ public class EventsController {
                 if (Boolean.parseBoolean(postToEventHub)) {
                     try {
                         BatchSender sender = BatchSender.create(this.eventHubClient);
-                        events.stream().
-                                forEach(eventString -> {
-                                    EventData data = new EventData(eventString.getBytes());
-                                    data.getProperties().put("receivedAt",
-                                            String.valueOf(Instant.now().getEpochSecond()));
-                                    try {
-                                        String eventName = mapper.
-                                                readValue(jsonEvent, Map.class).
-                                                get("eventName").
-                                                toString();
-                                        data.getProperties().put("eventName", eventName);
-                                    } catch (IOException ex) {
-                                        //TODO largely ignored , need to check what is to be done here
-                                        logger.error("Error reading property eventName " + ex.toString());
-                                    }
-                                    sender.send(data, deviceId);
-                                });
-                        //TODO check this logic of sending device ID as partition key (Is it from header)
+                        for (Map<String, Object> eventMap : events) {
+                            String json = new ObjectMapper().writeValueAsString(eventMap);
+                            logger.debug("Now parsing message : " + json);
+                            EventData data = new EventData(json.getBytes());
+                            String eventName = eventMap.get("eventName").toString();
+                            logger.debug("Step - 4 Event Name " + eventName);
+
+                            data.getProperties().put("receivedAt",
+                                    String.valueOf(Instant.now().getEpochSecond()));
+
+                            data.getProperties().put("eventName", eventName);
+                            sender.send(data, deviceId);
+                        }
                     } catch (Exception ex) {
                         logger.error("Uncaught Exception connecting to event hub " + ex.toString());
                         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).
@@ -85,8 +81,7 @@ public class EventsController {
                             header("x-api-build", "1.0").
                             build();
                 } else {
-                    //TODO change this back to OK ?
-                    return Response.status(Response.Status.CREATED).
+                    return Response.status(Response.Status.OK).
                             header("x-api-version", "1.0").
                             header("x-api-build", "1.0").
                             build();
