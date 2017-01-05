@@ -1,6 +1,5 @@
 package com.azure.ps.config;
 
-import com.azure.ps.ext.EventHubClientFactory;
 import com.azure.ps.interceptors.GzipReaderInterceptor;
 import com.github.psamsotha.jersey.properties.JerseyPropertiesFeature;
 import com.microsoft.azure.eventhubs.EventHubClient;
@@ -22,12 +21,12 @@ public class AppConfig extends ResourceConfig {
     private static final Logger logger = LoggerFactory.getLogger(AppConfig.class);
 
     public AppConfig() {
+        logger.debug("Init AppConfig()");
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();
         register(GzipReaderInterceptor.class);
         register(JerseyPropertiesFeature.class);
         property(JerseyPropertiesFeature.RESOURCE_PATH, "application.properties");
-
         logger.info("Now running the registration process in resource config");
 
         register(new AbstractBinder() {

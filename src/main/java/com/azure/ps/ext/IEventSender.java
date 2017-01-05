@@ -9,9 +9,7 @@ import com.microsoft.azure.eventhubs.EventData;
 import java.util.concurrent.CompletableFuture;
 
 public interface IEventSender {
-
     CompletableFuture<Void> send(final Iterable<EventData> edatas);
 
     CompletableFuture<Void> send(final Iterable<EventData> edatas, final String partitionKey);
-
 }

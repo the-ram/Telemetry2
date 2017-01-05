@@ -30,8 +30,6 @@ public class EventsController {
 
     private static final Logger logger = LoggerFactory.getLogger(EventsController.class);
 
-    //private IEventSender eventSender;
-
     @Prop("config.post.to.eventhub")
     private String postToEventHub;
 
@@ -42,22 +40,10 @@ public class EventsController {
         this.eventHubClient = eventHubClient;
     }
 
-    public EventsController() {
-        //this.eventHubClient = eventHubClient;
-    }
-
-    /*
-    @Inject
-    public EventsController(IEventSender eventSender, String deviceId) {
-        this.eventSender = eventSender;
-        this.deviceId = deviceId;
-    }
-    */
-
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response postedEvents(@Context HttpHeaders httpHeaders, String jsonEvent) {
+    public Response postEvents(@Context HttpHeaders httpHeaders, String jsonEvent) {
         try {
             ObjectMapper mapper = new ObjectMapper();
             Map<String, Object> eventsMap = mapper.readValue(jsonEvent, Map.class);
@@ -70,23 +56,6 @@ public class EventsController {
                 if (Boolean.parseBoolean(postToEventHub)) {
                     try {
                         BatchSender sender = BatchSender.create(this.eventHubClient);
-                        /*List<EventData> eventDataList = events.stream().
-                                map(event -> {
-                                    EventData data = new EventData(event.getBytes());
-                                    data.getProperties().put("receivedAt",
-                                            String.valueOf(Instant.now().getEpochSecond()));
-                                    try {
-                                        String eventName = mapper.
-                                                readValue(jsonEvent, Map.class).
-                                                get("eventName").
-                                                toString();
-                                        data.getProperties().put("eventName", eventName);
-                                    } catch (IOException ex) {
-                                        //TODO largely ignored , need to check what is to be done here
-                                        logger.error("Error reading property eventName " + ex.toString());
-                                    }
-                                    return data;
-                                }).collect(Collectors.toList());*/
                         events.stream().
                                 forEach(eventString -> {
                                     EventData data = new EventData(eventString.getBytes());
@@ -105,7 +74,6 @@ public class EventsController {
                                     sender.send(data, deviceId);
                                 });
                         //TODO check this logic of sending device ID as partition key (Is it from header)
-                        //sender.send(eventDataList, deviceId);
                     } catch (Exception ex) {
                         logger.error("Uncaught Exception connecting to event hub " + ex.toString());
                         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).

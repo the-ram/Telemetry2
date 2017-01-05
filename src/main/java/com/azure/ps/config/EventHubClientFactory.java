@@ -1,4 +1,4 @@
-package com.azure.ps.ext;
+package com.azure.ps.config;
 
 import com.github.psamsotha.jersey.properties.Prop;
 import com.microsoft.azure.eventhubs.EventHubClient;
@@ -42,7 +42,6 @@ public class EventHubClientFactory implements Factory<EventHubClient> {
         } catch (IOException e) {
             logger.error("IO Error initializing sender " + e.toString());
             return client;
-            //e.printStackTrace();
         }
     }
 
@@ -50,6 +49,4 @@ public class EventHubClientFactory implements Factory<EventHubClient> {
     public void dispose(EventHubClient eventHubClient) {
 
     }
-
-
 }

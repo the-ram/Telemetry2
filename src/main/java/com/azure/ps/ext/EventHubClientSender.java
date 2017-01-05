@@ -28,13 +28,12 @@ public class EventHubClientSender implements IEventSender {
     @Prop("config.eventhub.sasKey")
     private String sasKey;
 
-    EventHubClientSender(final EventHubClient eventHubClient) {
+    public EventHubClientSender(final EventHubClient eventHubClient) {
         this.eventHubClient = eventHubClient;
     }
 
     //TODO remove this finally
     private EventHubClientSender() {
-
         try {
             String connectionString = new ConnectionStringBuilder(eventHubNamespace,
                     eventHubName, sasKeyName, sasKey).toString();
