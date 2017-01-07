@@ -1,22 +1,18 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>com.azure.ps</groupId>
     <artifactId>Telemetry2</artifactId>
     <packaging>war</packaging>
     <version>1.0-SNAPSHOT</version>
     <name>Telemetry2</name>
-
     <properties>
         <jersey.version>2.25</jersey.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.build.path>/api</project.build.path>
         <sl4j.version>1.7.22</sl4j.version>
         <azure.eventhub.version>0.9.0</azure.eventhub.version>
     </properties>
-
-
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -30,7 +26,6 @@
     </dependencyManagement>
 
     <dependencies>
-
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
@@ -39,12 +34,12 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-servlet-core</artifactId>
+            <artifactId>jersey-container-servlet</artifactId>
             <version>${jersey.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-servlet</artifactId>
+            <groupId>org.glassfish.jersey.bundles</groupId>
+            <artifactId>jaxrs-ri</artifactId>
             <version>${jersey.version}</version>
         </dependency>
         <!-- uncomment this to get JSON support: -->
@@ -132,34 +127,22 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.5</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.2.1</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <groupId>org.apache.tomcat.maven</groupId>
+                <artifactId>tomcat7-maven-plugin</artifactId>
+                <version>2.2</version>
                 <configuration>
-                    <mainClass>com.azure.ps.Main</mainClass>
+                    <url>http://localhost:8080/manager/text</url>
+                    <server>TomcatServer</server>
+                    <path>/telemetry</path>
+                    <username>tomcat</username>
+                    <password>password</password>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
 </project>
-
-
-        <!--<dependency>-->
-        <!--<groupId>org.glassfish.jersey.containers</groupId>-->
-        <!--<artifactId>jersey-container-grizzly2-http</artifactId>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-        <!--<groupId>org.glassfish.jersey.containers</groupId>-->
-        <!--<artifactId>jersey-container-servlet</artifactId>-->
-        <!--<version>${jersey.version}</version>-->
-        <!--</dependency>-->
