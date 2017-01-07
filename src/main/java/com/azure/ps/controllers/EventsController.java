@@ -63,18 +63,21 @@ public class EventsController {
                             logger.debug("Now parsing message : " + json);
                             EventData data = new EventData(json.getBytes());
                             String eventName = eventMap.get("eventName").toString();
-                            logger.debug("Step - 4 Event Name " + eventName);
+                            //logger.debug("Setting property Event Name " + eventName);
 
+                            long epochSecond = Instant.now().getEpochSecond();
                             data.getProperties().put("receivedAt",
-                                    String.valueOf(Instant.now().getEpochSecond()));
+                                    String.valueOf(epochSecond));
 
                             data.getProperties().put("eventName", eventName);
+                            logger.trace("Properties set in message " + epochSecond +
+                                    " & event name " + eventName);
                             sender.send(data, deviceId);
                         }
                     } catch (Exception ex) {
                         logger.error("Uncaught Exception connecting to event hub " + ex.toString());
                         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).
-                                entity(ex.getMessage()).
+                                entity("Error connecting to event hub to post data").
                                 build();
                     }
                     return Response.status(Response.Status.CREATED).
@@ -89,11 +92,15 @@ public class EventsController {
                 }
             } else {
                 logger.error("NOT-WELL-FORMED", "Not well formed request");
-                return Response.status(Response.Status.BAD_REQUEST).entity("No events to process").build();
+                return Response.status(Response.Status.BAD_REQUEST).
+                        entity("No events to process in the posted message").
+                        build();
             }
         } catch (IOException exception) {
             logger.error("UNHANDLED EXCEPTION : " + exception.toString());
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).
+                    entity("Exception while posting message to the Event Hub (I.O)")
+                    .build();
         }
     }
 }
