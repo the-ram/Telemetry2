@@ -1,6 +1,6 @@
 package com.azure.ps.controllers;
 
-import com.azure.ps.ext.BatchSender;
+import com.azure.ps.ext.sender.BatchSender;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.psamsotha.jersey.properties.Prop;
 import com.microsoft.azure.eventhubs.EventData;
@@ -44,11 +44,12 @@ public class EventsController {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
+    @SuppressWarnings("unchecked")
     public Response postEvents(@Context HttpHeaders httpHeaders, String jsonEvent) {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            @SuppressWarnings("unchecked")
-            Map<String, Object> eventsMap = mapper.readValue(jsonEvent, Map.class);
+            Map<String, Object> eventsMap;
+            eventsMap = mapper.readValue(jsonEvent, Map.class);
             ArrayList<Map<String, Object>> events = (ArrayList<Map<String, Object>>) eventsMap.get("events");
             String deviceId = httpHeaders.getHeaderString("x-device-id");
 
@@ -63,12 +64,11 @@ public class EventsController {
                             logger.debug("Now parsing message : " + json);
                             EventData data = new EventData(json.getBytes());
                             String eventName = eventMap.get("eventName").toString();
-                            //logger.debug("Setting property Event Name " + eventName);
 
                             long epochSecond = Instant.now().getEpochSecond();
                             data.getProperties().put("receivedAt",
                                     String.valueOf(epochSecond));
-
+//TODO check for null in the device ID . if that header is empty fail
                             data.getProperties().put("eventName", eventName);
                             logger.trace("Properties set in message " + epochSecond +
                                     " & event name " + eventName);

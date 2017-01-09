@@ -1,4 +1,4 @@
-package com.azure.ps.ext;
+package com.azure.ps.ext.sender;
 
 /**
  * Created by adithya on 3/1/17.
