@@ -6,13 +6,15 @@ package com.azure.ps.ext.store;
 public interface IEventStore {
 
     int level = 0;
-
     String receivedAtHour = null;
-
     String partitionId = null;
 
-    void initialise(String partitionId, String receivedAtHour);
+    int getLevel();
 
+    String getReceivedAtHour();
+
+    String getPartitionId();
+    void initialise(String partitionId, String receivedAtHour);
     void write(byte[] value);
 
 

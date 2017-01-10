@@ -8,6 +8,10 @@ import com.microsoft.azure.eventprocessorhost.PartitionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Named;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -18,6 +22,7 @@ import java.util.concurrent.ConcurrentMap;
 public class DeepStorageEventProcessor implements IEventProcessor {
     private static ConcurrentMap<String, IEventStore> keyStoreMap = new ConcurrentHashMap<String, IEventStore>();
     private final Logger logger = LoggerFactory.getLogger(DeepStorageEventProcessor.class);
+
 
     @Override
     public void onOpen(PartitionContext partitionContext) throws Exception {
@@ -39,10 +44,13 @@ public class DeepStorageEventProcessor implements IEventProcessor {
         logger.trace("On Event in processor partition id  {} ", partitionContext.getPartitionId());
 
         for (EventData eventData : iterable) {
+            IEventStore store = this.getEventStore(eventData, partitionContext.getPartitionId());
             String message = new String(eventData.getBody());
             logger.trace("Event message is {} ", message);
             logger.trace("Event message offset is {} ", eventData.getBodyOffset());
+            store.write(message.getBytes());
         }
+        partitionContext.checkpoint();
     }
 
     @Override
@@ -56,6 +64,14 @@ public class DeepStorageEventProcessor implements IEventProcessor {
         String message = new String(eventData.getBody());
         Map<String, String> properties = eventData.getProperties();
         String epochReceivedAt = properties.get("receivedAt");
-        return null;
+        String localDateWithHour = Instant.ofEpochMilli(Long.parseLong(epochReceivedAt)).
+                atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyyMMddHH"));
+        String eventStoreKey = localDateWithHour + 'p' + partitionId;
+        if (!keyStoreMap.containsKey(eventStoreKey)) {
+            @Named("EventStore") IEventStore eventStore = null;
+            logger.trace("Creating a new instance of the IEventStore bean {} ", (eventStore == null));
+            keyStoreMap.put(eventStoreKey, eventStore);
+        }
+        return keyStoreMap.get(eventStoreKey);
     }
 }
