@@ -1,6 +1,7 @@
 package com.azure.ps.ext.processor;
 
 import com.azure.ps.ext.store.IEventStore;
+import com.azure.ps.ext.store.MemoryEventStore;
 import com.microsoft.azure.eventhubs.EventData;
 import com.microsoft.azure.eventprocessorhost.CloseReason;
 import com.microsoft.azure.eventprocessorhost.IEventProcessor;
@@ -8,7 +9,7 @@ import com.microsoft.azure.eventprocessorhost.PartitionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
+import javax.enterprise.inject.Instance;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -16,13 +17,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+
 /**
  * Created by adithya on 8/1/17.
  */
 public class DeepStorageEventProcessor implements IEventProcessor {
     private static ConcurrentMap<String, IEventStore> keyStoreMap = new ConcurrentHashMap<String, IEventStore>();
     private final Logger logger = LoggerFactory.getLogger(DeepStorageEventProcessor.class);
-
+    private
+    @MemoryEventStore
+    Instance<IEventStore> memoryEventStore;
 
     @Override
     public void onOpen(PartitionContext partitionContext) throws Exception {
@@ -68,8 +72,9 @@ public class DeepStorageEventProcessor implements IEventProcessor {
                 atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyyMMddHH"));
         String eventStoreKey = localDateWithHour + 'p' + partitionId;
         if (!keyStoreMap.containsKey(eventStoreKey)) {
-            @Named("EventStore") IEventStore eventStore = null;
+            IEventStore eventStore = memoryEventStore.get();
             logger.trace("Creating a new instance of the IEventStore bean {} ", (eventStore == null));
+            eventStore.write(message.getBytes());
             keyStoreMap.put(eventStoreKey, eventStore);
         }
         return keyStoreMap.get(eventStoreKey);

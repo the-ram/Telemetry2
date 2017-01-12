@@ -1,42 +1,13 @@
 package com.azure.ps.ext.store;
 
-import com.github.psamsotha.jersey.properties.Prop;
+import javax.inject.Qualifier;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-/**
- * Created by RGOVIND on 1/10/2017.
- */
-public class MemoryEventStore implements IEventStore {
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Qualifier
+public @interface MemoryEventStore {
 
-    private String receivedAtHour;
-    private String partitionId;
-    @Prop("config.memorystore.maxbuffer")
-    private int maxBufferSize;
-    private StringBuilder buffer;
-
-    @Override
-    public int getLevel() {
-        return 1;
-    }
-
-    @Override
-    public String getReceivedAtHour() {
-        return receivedAtHour;
-    }
-
-    @Override
-    public String getPartitionId() {
-        return partitionId;
-    }
-
-    @Override
-    public void initialise(String partitionId, String receivedAtHour) {
-        this.partitionId = partitionId;
-        this.receivedAtHour = receivedAtHour;
-        this.buffer = new StringBuilder(maxBufferSize);
-    }
-
-    @Override
-    public void write(byte[] value) {
-
-    }
 }
