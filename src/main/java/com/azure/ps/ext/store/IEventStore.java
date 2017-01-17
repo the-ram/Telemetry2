@@ -14,7 +14,9 @@ public interface IEventStore {
     String getReceivedAtHour();
 
     String getPartitionId();
+
     void initialise(String partitionId, String receivedAtHour);
+
     void write(byte[] value);
 
 

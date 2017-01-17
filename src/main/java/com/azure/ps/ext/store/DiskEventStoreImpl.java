@@ -5,7 +5,7 @@ import com.github.psamsotha.jersey.properties.Prop;
 /**
  * Created by RGOVIND on 1/12/2017.
  */
-public class FileEventStoreImpl implements IEventStore {
+public class DiskEventStoreImpl implements IEventStore {
 
 
     private String receivedAtHour;
@@ -34,6 +34,8 @@ public class FileEventStoreImpl implements IEventStore {
         this.partitionId = partitionId;
         this.receivedAtHour = receivedAtHour;
         this.buffer = new StringBuilder(maxBufferSize);
+        String tempFileName =           //
+        // File temp = File.createTempFile("temp-file-name", ".tmp");
     }
 
     @Override
