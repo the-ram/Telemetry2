@@ -206,15 +206,15 @@
                     <artifactId>jersey-cdi1x</artifactId>
                     <scope>compile</scope>
                 </dependency>
-                <dependency>
-                    <groupId>org.glassfish.jersey.ext.cdi</groupId>
-                    <artifactId>jersey-cdi1x-servlet</artifactId>
-                    <scope>compile</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.jboss.weld.servlet</groupId>
-                    <artifactId>weld-servlet</artifactId>
-                </dependency>
+                <!--<dependency>-->
+                <!--<groupId>org.glassfish.jersey.ext.cdi</groupId>-->
+                <!--<artifactId>jersey-cdi1x-servlet</artifactId>-->
+                <!--<scope>compile</scope>-->
+                <!--</dependency>-->
+                <!--<dependency>-->
+                <!--<groupId>org.jboss.weld.servlet</groupId>-->
+                <!--<artifactId>weld-servlet</artifactId>-->
+                <!--</dependency>-->
             </dependencies>
         </profile>
     </profiles>
