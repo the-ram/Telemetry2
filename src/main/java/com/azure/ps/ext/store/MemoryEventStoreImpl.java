@@ -1,8 +1,12 @@
 package com.azure.ps.ext.store;
 
 import com.github.psamsotha.jersey.properties.Prop;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 
 
 /**
@@ -11,12 +15,13 @@ import javax.inject.Inject;
 @MemoryEventStore
 public class MemoryEventStoreImpl implements IEventStore {
 
+    private final Logger logger = LoggerFactory.getLogger(MemoryEventStoreImpl.class);
     private String receivedAtHour;
     private String partitionId;
     @Prop("config.memorystore.maxbuffer")
     private int maxBufferSize;
     private StringBuilder buffer;
-
+    private Semaphore semaphore = new Semaphore(1, true);
     @Inject
     @DiskEventStore
     private IEventStore nextStore;
@@ -53,15 +58,43 @@ public class MemoryEventStoreImpl implements IEventStore {
         String eventData = new String(value);
 
         if (buffer.length() + byteCount > maxBufferSize) {
-
-        } else {
+            flushToDisk();
+        }
+        try {
+            semaphore.wait();
             buffer.append(eventData);
+        } catch (InterruptedException iex) {
+            logger.error("Exception in acquiring lock in write {} ", iex.getMessage());
+        } finally {
+            //release the semaphore
+            semaphore.release();
         }
 
+
     }
+    //TODO encode the string to UTF-8
 
     private void flushToDisk() {
-        String dataBlock = buffer.toString();
-        //buffer.
+        String dataBlock = new String();
+        if (buffer != null && buffer.length() > 0) {
+            try {
+                logger.debug("Performing write into disk from memory event store");
+                semaphore.acquire();
+                dataBlock = buffer.toString();
+                //clear the buffer
+                buffer.setLength(0);
+
+            } catch (InterruptedException iex) {
+                logger.error("Exception in acquiring lock in flushToDisk {} ", iex.getMessage());
+            } finally {
+                //release the semaphore
+                semaphore.release();
+            }
+            final String finalDataBlock = dataBlock;
+            Executors.newSingleThreadExecutor().submit(() -> {
+                nextStore.write(finalDataBlock.getBytes());
+            });
+
+        }
     }
 }
