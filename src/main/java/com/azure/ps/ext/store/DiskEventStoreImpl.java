@@ -2,18 +2,25 @@ package com.azure.ps.ext.store;
 
 import com.github.psamsotha.jersey.properties.Prop;
 import com.google.common.io.Files;
+import org.apache.commons.compress.compressors.CompressorInputStream;
 import org.apache.commons.compress.compressors.CompressorOutputStream;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.compress.utils.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.UUID;
+import java.util.concurrent.Semaphore;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Created by RGOVIND on 1/12/2017.
  */
 public class DiskEventStoreImpl implements IEventStore {
 
+    private final Logger logger = LoggerFactory.getLogger(DiskEventStoreImpl.class);
+    private Semaphore semaphore = new Semaphore(1, true);
 
     private String receivedAtHour;
     private String partitionId;
@@ -61,20 +68,20 @@ public class DiskEventStoreImpl implements IEventStore {
 
     @Override
     public void write(byte[] value) {
-        try (ByteArrayInputStream bytesToAppend = new ByteArrayInputStream(value);
-             FileInputStream existingGzipFileInputStream = new FileInputStream(gzipFilePath);
-             FileOutputStream addedGzipFileOutputStream = new FileOutputStream(gzipFilePath);
-             CompressorOutputStream gzipOutputStream = new CompressorStreamFactory().
-                     createCompressorOutputStream(CompressorStreamFactory.GZIP, addedGzipFileOutputStream);
-             BufferedWriter writer = new BufferedWriter(
-                     new OutputStreamWriter(gzipOutputStream, "UTF-8"));
-        ) {
-            IOUtils.copy(existingGzipFileInputStream, gzipOutputStream);
-            writer.append(new String(value));
-            writer.newLine();
+        try (CompressorInputStream gzipInputStream = new CompressorStreamFactory()
+                .createCompressorInputStream(CompressorStreamFactory.GZIP, new FileInputStream(gzipFilePath));
+             CompressorOutputStream gzipOutputStream = new CompressorStreamFactory()
+                     .createCompressorOutputStream(CompressorStreamFactory.GZIP, new FileOutputStream(gzipFilePath, true))){
 
-        } catch (Exception ioEx) {
+            semaphore.acquire();
+            IOUtils.copy(gzipInputStream, gzipOutputStream);
+            gzipOutputStream.write(value);
 
+        }catch(Exception ioEx){
+            logger.error("Exception while appending file {} " ,ioEx.getMessage());
+        }finally {
+            semaphore.release();
         }
+
     }
 }
